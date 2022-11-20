@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 project(vds)
 
-set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # gtest
@@ -32,6 +31,13 @@ set(SOURCES
   "src/main.cpp"
   "src/Recursion.cpp"
 )
-add_executable(${PROJECT_NAME} ${SOURCES})
-target_include_directories(${PROJECT_NAME} PUBLIC include)
 
+add_executable(${PROJECT_NAME} ${INTERFACE} ${SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC include)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+
+add_custom_target(run-${PROJECT_NAME}
+    COMMAND ${PROJECT_NAME}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${PROJECT_NAME}
+)

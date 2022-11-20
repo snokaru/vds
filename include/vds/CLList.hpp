@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <iostream>
 
 namespace vds {
 template <typename T>
@@ -12,7 +13,6 @@ struct CLNode {
 template <typename T>
 class CLList {
 public:
-    CLList();
     ~CLList();
     bool empty() const;
     const T& front() const;
@@ -23,12 +23,6 @@ public:
 private:
     CLNode<T>* cursor = nullptr;
 };
-
-template <typename T>
-CLList<T>::CLList() {
-    cursor = new CLNode<T>;
-    cursor->next = cursor;
-}
 
 template <typename T>
 CLList<T>::~CLList() {
@@ -44,7 +38,12 @@ bool CLList<T>::empty() const {
 
 template <typename T>
 const T& CLList<T>::front() const {
-    return cursor->next;
+    return cursor->next->element;
+}
+
+template <typename T>
+const T& CLList<T>::back() const {
+    return cursor->element;
 }
 
 template <typename T>

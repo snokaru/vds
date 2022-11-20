@@ -3,6 +3,13 @@
 #include <utility>
 
 namespace vds {
+
+template <typename T>
+class SLList;
+
+template <typename T>
+void swap(SLList<T>&, SLList<T>&);
+
 template <typename T>
 struct SLNode {
     T element;
@@ -22,7 +29,7 @@ public:
     void push_front(T element);
     void remove_front();
 
-    friend void swap(SLList&, SLList&);
+    friend void swap<T>(SLList&, SLList&);
 private:
     SLNode<T>* head;
 };
