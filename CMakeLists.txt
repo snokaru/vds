@@ -28,6 +28,7 @@ set(INTERFACE
   "include/${PROJECT_NAME}/Stack.hpp"
   "include/${PROJECT_NAME}/Queue.hpp"
   "include/${PROJECT_NAME}/Deque.hpp"
+  "include/${PROJECT_NAME}/PriorityQueue.hpp"
 )
 set(SOURCES
   "src/main.cpp"
