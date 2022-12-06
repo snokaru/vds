@@ -29,6 +29,7 @@ set(INTERFACE
   "include/${PROJECT_NAME}/Queue.hpp"
   "include/${PROJECT_NAME}/Deque.hpp"
   "include/${PROJECT_NAME}/PriorityQueue.hpp"
+  "include/${PROJECT_NAME}/Map.hpp"
 )
 set(SOURCES
   "src/main.cpp"
@@ -37,7 +38,8 @@ set(SOURCES
 
 add_executable(${PROJECT_NAME} ${INTERFACE} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 add_custom_target(run-${PROJECT_NAME}
     COMMAND ${PROJECT_NAME}
