@@ -29,7 +29,8 @@ set(INTERFACE
   "include/${PROJECT_NAME}/Queue.hpp"
   "include/${PROJECT_NAME}/Deque.hpp"
   "include/${PROJECT_NAME}/PriorityQueue.hpp"
-  "include/${PROJECT_NAME}/Map.hpp"
+  "include/${PROJECT_NAME}/OrderedArrayMap.hpp"
+  "include/${PROJECT_NAME}/UnorderedHashMap.hpp"
 )
 set(SOURCES
   "src/main.cpp"
