@@ -3,25 +3,34 @@
 #include <utility>
 #include <vector>
 #include <optional>
+#include <ctime>
 
 #include <vds/PriorityQueue.hpp>
 #include <vds/OrderedArrayMap.hpp>
 #include <vds/UnorderedHashMap.hpp>
+#include <vds/OrderedSkipListMap.hpp>
 
 int main(void) {
-    vds::UnorderedHashMap<std::string, int> myMap;
+    srand (10);
 
-    myMap["a"] = 754;
-    myMap["b"] = 123;
-    myMap["c"] = 1394;
-    auto it = myMap.insert("testing", 344);
-    std::cout << "inserted with insert: " << it->first << '\n';
-    for (const auto& el: myMap) {
-        std::cout << el.first << ": " << el.second << '\n';
+    OrderedSkipListMap<std::string, int> map;
+    if (map.empty()) {
+        std::cout << "the map is empty...\n";
+    } else {
+        std::cout << "the map has some items...\n";
+        std::cout << map.size() << " items.\n";
     }
 
-    myMap.erase(it);
-    for (const auto& el: myMap) {
-        std::cout << el.first << ": " << el.second << '\n';
+    std::cout << "starting a loop over the map...\n";
+    for (auto it = map.begin(); it != map.end(); ++it) {
+        std::cout << "looping through the map...\n";
     }
+
+    map.insert("test", 123);
+    map.insert("abcd", 1234);
+    for (auto it = map.begin(); it != map.end(); ++it) {
+        std::cout << "looping through the map...\n";
+        std::cout << "current item {" << it->first << ":" << it->second << "}\n";
+    }
+
 }

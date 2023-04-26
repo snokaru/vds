@@ -133,7 +133,7 @@ auto OrderedArrayMap<Key, Value, Compare>::find(const Key& key) const -> Iterato
 template <typename Key, typename Value, typename Compare>
 auto OrderedArrayMap<Key, Value, Compare>::insert(Key key, Value value) -> Iterator {
     for (auto& entry : *this) {
-        if (entry->first == key) {
+        if (compare(entry->fist, key)) {
             entry = {std::move(key), std::move(value)};
             return;
         }
