@@ -10,6 +10,18 @@ template <typename Key, typename Value>
 struct SkipListEntry {
     using Entry = std::pair<Key, Value>;
 
+    SkipListEntry(
+        Entry* entry = nullptr,
+        SkipListEntry* next = nullptr,
+        SkipListEntry* prev = nullptr,
+        SkipListEntry* below = nullptr,
+        SkipListEntry* above = nullptr)
+    : entry(entry)
+    , next(next)
+    , prev(prev)
+    , below(below)
+    , above(above) {}
+
     Entry* entry{nullptr};
 
     SkipListEntry* next{nullptr};
@@ -56,6 +68,13 @@ auto SkipListEntry<Key, Value>::value() -> Value& {
     return entry->second;
 }
 
+
+template <typename Key, typename Value, typename Compare>
+class OrderedSkipListMap;
+
+template <typename Key, typename Value, typename Compare>
+void swap(OrderedSkipListMap<Key, Value, Compare>& lhs, OrderedSkipListMap<Key, Value, Compare>& rhs);
+
 template <typename Key, typename Value, typename Compare = std::less<Key>>
 class OrderedSkipListMap {
 public:
@@ -78,7 +97,10 @@ public:
         Entry* current;
     };
 
+    friend void swap(OrderedSkipListMap& lhs, OrderedSkipListMap& rhs);
+
     OrderedSkipListMap(Compare = Compare());
+    OrderedSkipListMap(const OrderedSkipListMap& other);
     ~OrderedSkipListMap();
 
     Iterator begin();
@@ -103,6 +125,7 @@ private:
     Entry* bottom_right;
 
     Entry* _find_after(const Key& key) const; 
+    void _create_layer_above();
     void clear();
 };
 
@@ -157,6 +180,17 @@ auto OrderedSkipListMap<Key, Value, Compare>::Iterator::operator--(int) -> Itera
 }
 
 template <typename Key, typename Value, typename Compare>
+void swap(OrderedSkipListMap<Key, Value, Compare>& lhs, OrderedSkipListMap<Key, Value, Compare>& rhs)
+{
+    swap(lhs.compare, rhs.compare);
+    swap(lhs.top_left, rhs.top_left);
+    swap(lhs.top_right, rhs.top_right);
+    swap(lhs.bottom_left, rhs.bottom_left);
+    swap(lhs.bottom_right, rhs.bottom_right);
+    swap(lhs.entries, rhs.entries);
+}
+
+template <typename Key, typename Value, typename Compare>
 OrderedSkipListMap<Key, Value, Compare>::OrderedSkipListMap(Compare compare)
 : entries({{}, {}})
 , less(std::move(compare))
@@ -184,7 +218,6 @@ template <typename Key, typename Value, typename Compare>
 auto OrderedSkipListMap<Key, Value, Compare>::size() const -> size_t {
     return entries.size() - 2;
 }
-
 template <typename Key, typename Value, typename Compare>
 auto OrderedSkipListMap<Key, Value, Compare>::empty() const -> bool {
     return size() == 0;
@@ -192,16 +225,36 @@ auto OrderedSkipListMap<Key, Value, Compare>::empty() const -> bool {
 
 template <typename Key, typename Value, typename Compare>
 auto OrderedSkipListMap<Key, Value, Compare>::_find_after(const Key& key) const -> Entry* {
-    auto it = top_left;
+    auto it = top_left->next;
 
     do {
-        while (it->is_minus_inf() or (not it->is_inf() and less(key, it->key()))) {
+        while (not it->is_inf() and less(key, it->key())) {
             it = it->next;
         }
         it = it->is_bottom() ? it : it->below;
     } while (!it->is_bottom());
 
     return it;
+}
+
+template <typename Key, typename Value, typename Compare>
+void OrderedSkipListMap<Key, Value, Compare>::_create_layer_above()
+{
+        auto new_left_ptr = new Entry();
+        new_left_ptr->below = top_left;
+        new_left_ptr->entry = &entries.back();
+        top_left->above = new_left_ptr;
+
+        auto new_right_ptr = new Entry();
+        new_right_ptr->below = top_right;
+        new_right_ptr->entry = &*(++entries.begin());
+        top_right->above = new_right_ptr;
+
+        new_left_ptr->next = new_right_ptr;
+        new_right_ptr->prev = new_left_ptr;
+
+        top_left = new_left_ptr;
+        top_right = new_right_ptr;
 }
 
 template <typename Key, typename Value, typename Compare>
@@ -232,24 +285,8 @@ auto OrderedSkipListMap<Key, Value, Compare>::insert(Key key, Value value) -> It
     auto left_ptr = bottom_left, right_ptr = bottom_right;
     auto new_entry_current_level_ptr = new_entry_ptr;
     while (rand() % 2 == 0) {
-        std::cout << "going above...\n";
         if (left_ptr->above == nullptr) {
-            // new layer should be added
-            auto new_left_ptr = new Entry();
-            new_left_ptr->below = left_ptr;
-            new_left_ptr->entry = &entries.back();
-            left_ptr->above = new_left_ptr;
-
-            auto new_right_ptr = new Entry();
-            new_right_ptr->below = right_ptr;
-            new_right_ptr->entry = &*(++entries.begin());
-            right_ptr->above = new_right_ptr;
-
-            new_left_ptr->next = new_right_ptr;
-            new_right_ptr->prev = new_left_ptr;
-
-            top_left = new_left_ptr;
-            top_right = new_right_ptr;
+            _create_layer_above();
         }
 
         auto new_entry_above_ptr = new Entry();
