@@ -72,9 +72,6 @@ auto SkipListEntry<Key, Value>::value() -> Value& {
 template <typename Key, typename Value, typename Compare>
 class OrderedSkipListMap;
 
-template <typename Key, typename Value, typename Compare>
-void swap(OrderedSkipListMap<Key, Value, Compare>& lhs, OrderedSkipListMap<Key, Value, Compare>& rhs);
-
 template <typename Key, typename Value, typename Compare = std::less<Key>>
 class OrderedSkipListMap {
 public:
@@ -97,14 +94,24 @@ public:
         Entry* current;
     };
 
-    friend void swap(OrderedSkipListMap& lhs, OrderedSkipListMap& rhs);
+    friend void swap(OrderedSkipListMap& lhs, OrderedSkipListMap& rhs) {
+        using std::swap;
+        swap(lhs.less, rhs.less);
+        swap(lhs.top_left, rhs.top_left);
+        swap(lhs.top_right, rhs.top_right);
+        swap(lhs.bottom_left, rhs.bottom_left);
+        swap(lhs.bottom_right, rhs.bottom_right);
+        swap(lhs.entries, rhs.entries);
+    }
 
     OrderedSkipListMap(Compare = Compare());
-    OrderedSkipListMap(const OrderedSkipListMap& other);
+    OrderedSkipListMap(const OrderedSkipListMap&);
+    OrderedSkipListMap(OrderedSkipListMap&&);
+    OrderedSkipListMap& operator=(OrderedSkipListMap);
     ~OrderedSkipListMap();
 
-    Iterator begin();
-    Iterator end();
+    Iterator begin() const;
+    Iterator end() const;
 
     size_t size() const;
     bool empty() const;
@@ -180,17 +187,6 @@ auto OrderedSkipListMap<Key, Value, Compare>::Iterator::operator--(int) -> Itera
 }
 
 template <typename Key, typename Value, typename Compare>
-void swap(OrderedSkipListMap<Key, Value, Compare>& lhs, OrderedSkipListMap<Key, Value, Compare>& rhs)
-{
-    swap(lhs.compare, rhs.compare);
-    swap(lhs.top_left, rhs.top_left);
-    swap(lhs.top_right, rhs.top_right);
-    swap(lhs.bottom_left, rhs.bottom_left);
-    swap(lhs.bottom_right, rhs.bottom_right);
-    swap(lhs.entries, rhs.entries);
-}
-
-template <typename Key, typename Value, typename Compare>
 OrderedSkipListMap<Key, Value, Compare>::OrderedSkipListMap(Compare compare)
 : entries({{}, {}})
 , less(std::move(compare))
@@ -205,12 +201,43 @@ OrderedSkipListMap<Key, Value, Compare>::OrderedSkipListMap(Compare compare)
 }
 
 template <typename Key, typename Value, typename Compare>
-auto OrderedSkipListMap<Key, Value, Compare>::begin() -> Iterator {
+OrderedSkipListMap<Key, Value, Compare>::OrderedSkipListMap(const OrderedSkipListMap& other)
+: entries({{}, {}})
+, less(other.less)
+, top_left(new Entry())
+, top_right(new Entry())
+, bottom_left(top_left)
+, bottom_right(top_right) {
+    top_left->entry = &entries.front();
+    bottom_left->entry = &entries.back();
+    top_left->next = top_right;
+    top_right->prev = top_left;
+
+    for (auto it = other.begin(); it != other.end(); ++it) {
+        insert(it->first, it->second);
+    }
+}    
+
+template <typename Key, typename Value, typename Compare>
+auto OrderedSkipListMap<Key, Value, Compare>::operator=(OrderedSkipListMap other) -> OrderedSkipListMap& {
+    swap(*this, other);
+    return *this;
+}
+
+template <typename Key, typename Value, typename Compare>
+OrderedSkipListMap<Key, Value, Compare>::OrderedSkipListMap(OrderedSkipListMap&& other)
+: OrderedSkipListMap()
+{
+    swap(*this, other);
+}
+
+template <typename Key, typename Value, typename Compare>
+auto OrderedSkipListMap<Key, Value, Compare>::begin() const -> Iterator {
     return Iterator(bottom_left->next);
 }
 
 template <typename Key, typename Value, typename Compare>
-auto OrderedSkipListMap<Key, Value, Compare>::end() -> Iterator {
+auto OrderedSkipListMap<Key, Value, Compare>::end() const -> Iterator {
     return Iterator(bottom_right);
 }
 
@@ -324,13 +351,11 @@ auto OrderedSkipListMap<Key, Value, Compare>::clear() -> void {
 
         auto right_moving_ptr = down_moving_ptr;
         while (right_moving_ptr) {
-            std::cout << "deleting one node..\n";
             auto next = right_moving_ptr->next;
             delete right_moving_ptr;
             right_moving_ptr = next;
         }
 
-        std::cout << "going below...\n";
         down_moving_ptr = below;
     }
 }
